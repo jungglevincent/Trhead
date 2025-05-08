@@ -1,226 +1,53 @@
-<!DOCTYPE html>
-<html lang="id">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Simulasi Thread & Asinkron Download Game</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f0f0f0;
-      padding: 20px;
-      margin: 0;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      max-width: 1200px;
-      margin: auto;
-    }
-
-    .card {
-      background: white;
-      border-radius: 10px;
-      padding: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    .card h2 {
-      font-size: 1.1em;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-
-    button {
-      margin-top: 10px;
-      width: 100%;
-      padding: 8px;
-      background: #3498db;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #2980b9;
-    }
-
-    .penjelasan {
-      margin-top: 10px;
-      font-size: 0.9em;
-      background: #fef6e4;
-      border-left: 4px solid #f39c12;
-      padding: 10px;
-      border-radius: 5px;
-    }
-
-    .progress-container {
-      margin-top: 10px;
-    }
-
-    .progress-bar {
-      width: 100%;
-      background: #ddd;
-      border-radius: 5px;
-      margin-bottom: 8px;
-      overflow: hidden;
-      height: 16px;
-    }
-
-    .progress-fill {
-      height: 100%;
-      width: 0%;
-      background-color: #4caf50;
-      transition: width 0.1s;
-    }
-
-    .label {
-      font-size: 0.85em;
-      margin-bottom: 2px;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thread Simulation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-
-<h1>Simulasi: Download Game dengan Banyak File</h1>
-
-<div class="grid-container">
-
-  <!-- Tanpa Thread -->
-  <div class="card">
-    <h2>🚫 Tanpa Thread</h2>
-    <button onclick="simulasiTanpaThread()">Mulai Download</button>
-    <div id="progressTanpa" class="progress-container"></div>
-    <div class="penjelasan">
-      Semua file game akan diunduh satu per satu, setiap file akan menunggu file sebelumnya selesai. Proses ini sangat lambat dan menghambat pekerjaan lain.
-    </div>
-  </div>
-
-  <!-- Sinkronus -->
-  <div class="card">
-    <h2>🧱 Sinkronus</h2>
-    <button onclick="simulasiSinkronus()">Mulai Download</button>
-    <div id="progressSinkron" class="progress-container"></div>
-    <div class="penjelasan">
-      Proses download tetap berurutan, namun masih bisa terus berjalan di background. Anda bisa melihat progresnya tanpa harus menunggu semuanya selesai.
-    </div>
-  </div>
-
-  <!-- Asinkronus -->
-  <div class="card">
-    <h2>⚡ Asinkronus</h2>
-    <button onclick="simulasiAsinkronus()">Mulai Download</button>
-    <div id="progressAsync" class="progress-container"></div>
-    <div class="penjelasan">
-      Semua file game diunduh secara paralel, tidak perlu menunggu satu file selesai. Proses ini sangat efisien dan menghemat waktu.
-    </div>
-  </div>
-
+<body class="bg-gray-100 p-6 font-sans">
+  <h1 class="text-2xl font-bold text-center mb-6">Simulasi Visual Thread: Sinkron vs Asinkron</h1>  <div class="grid grid-cols-2 gap-6">
+    <!-- Synchronous Thread Simulation -->
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold mb-2">Synchronous</h2>
+      <p class="mb-4 text-sm text-gray-600">Semua tugas dijalankan satu per satu, menunggu yang sebelumnya selesai.</p>
+      <div id="sync-output" class="space-y-2"></div>
+      <button onclick="runSync()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Jalankan Sinkron</button>
+    </div><!-- Asynchronous Thread Simulation -->
+<div class="bg-white p-4 rounded shadow">
+  <h2 class="text-xl font-semibold mb-2">Asynchronous</h2>
+  <p class="mb-4 text-sm text-gray-600">Tugas berjalan terpisah. Tidak menunggu tugas lain selesai.</p>
+  <div id="async-output" class="space-y-2"></div>
+  <button onclick="runAsync()" class="mt-4 bg-green-600 text-white px-4 py-2 rounded">Jalankan Asinkron</button>
 </div>
 
-<script>
-  function buatBar(containerId, label) {
-    const container = document.getElementById(containerId);
-    const barWrapper = document.createElement("div");
+  </div>  <script>
+    function runSync() {
+      const output = document.getElementById('sync-output');
+      output.innerHTML = '';
 
-    const labelEl = document.createElement("div");
-    labelEl.className = "label";
-    labelEl.textContent = label;
-
-    const bar = document.createElement("div");
-    bar.className = "progress-bar";
-
-    const fill = document.createElement("div");
-    fill.className = "progress-fill";
-
-    const statusEl = document.createElement("span");
-    statusEl.style.marginLeft = "8px";
-
-    labelEl.appendChild(statusEl);
-    bar.appendChild(fill);
-    barWrapper.appendChild(labelEl);
-    barWrapper.appendChild(bar);
-    container.appendChild(barWrapper);
-
-    return { fill, statusEl };
-  }
-  
-  function isiBar(fillObj, duration, callback) {
-    let percent = 0;
-    const interval = setInterval(() => {
-      percent += 1;
-      fillObj.fill.style.width = percent + "%";
-      if (percent >= 100) {
-        clearInterval(interval);
-        fillObj.statusEl.textContent = "✅";
-        if (callback) callback();
+      for (let i = 1; i <= 3; i++) {
+        const block = document.createElement('div');
+        block.className = 'bg-blue-100 text-blue-800 p-2 rounded';
+        block.innerText = `Tugas ${i} selesai (sync)`;
+        output.appendChild(block);
       }
-    }, duration / 100);
-  }
-  
-  function clearProgress(id) {
-    document.getElementById(id).innerHTML = "";
-  }
-  
-  // Tanpa Thread
-  function simulasiTanpaThread() {
-    clearProgress("progressTanpa");
-    const bars = [];
-
-    // Buat semua bar dulu dan simpan fill dan status
-    for (let i = 1; i <= 5; i++) {
-      const bar = buatBar("progressTanpa", `File ${i} - Game Data`);
-      bars.push(bar);
     }
 
-    // Jalankan satu per satu
-    let i = 0;
-    function next() {
-      if (i >= bars.length) {
-        // Semua sudah selesai, tampilkan centang
-        bars.forEach(bar => bar.statusEl.textContent = "✅");
-        return;
+    function runAsync() {
+      const output = document.getElementById('async-output');
+      output.innerHTML = '';
+
+      for (let i = 1; i <= 3; i++) {
+        const block = document.createElement('div');
+        block.className = 'bg-green-100 text-green-800 p-2 rounded';
+        block.innerText = `Menjalankan tugas ${i}... (async)`;
+        output.appendChild(block);
+
+        setTimeout(() => {
+          block.innerText = `Tugas ${i} selesai (async)`;
+        }, 1000 * i);
       }
-      isiBar(bars[i].fill, 2000, () => {
-        i++;
-        next();
-      });
     }
-
-    next();
-  }
-
-  // Sinkronus
-  function simulasiSinkronus() {
-    clearProgress("progressSinkron");
-    let i = 1;
-    function downloadNext() {
-      if (i > 5) return;
-      const bar = buatBar("progressSinkron", `File ${i} - Game Data`);
-      isiBar(bar, 2000, () => {
-        i++;
-        downloadNext();
-      });
-    }
-    downloadNext();
-  }
-
-  // Asinkronus
-  function simulasiAsinkronus() {
-    clearProgress("progressAsync");
-    for (let i = 1; i <= 5; i++) {
-      const bar = buatBar("progressAsync", `File ${i} - Game Data`);
-      isiBar(bar, 2000);
-    }
-  }
-</script>
-
-</body>
+  </script></body>
 </html>
