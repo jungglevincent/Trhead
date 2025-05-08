@@ -2,52 +2,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thread Simulation</title>
+  <title>Simulasi Thread: Kasir Supermarket</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6 font-sans">
-  <h1 class="text-2xl font-bold text-center mb-6">Simulasi Visual Thread: Sinkron vs Asinkron</h1>  <div class="grid grid-cols-2 gap-6">
-    <!-- Synchronous Thread Simulation -->
+  <h1 class="text-2xl font-bold text-center mb-6">Simulasi Visual Thread: Antrian Kasir Supermarket</h1>  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Synchronous Kasir (1 kasir saja) -->
     <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold mb-2">Synchronous</h2>
-      <p class="mb-4 text-sm text-gray-600">Semua tugas dijalankan satu per satu, menunggu yang sebelumnya selesai.</p>
-      <div id="sync-output" class="space-y-2"></div>
-      <button onclick="runSync()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Jalankan Sinkron</button>
-    </div><!-- Asynchronous Thread Simulation -->
+      <h2 class="text-xl font-semibold mb-2">1 Kasir (Synchronous)</h2>
+      <p class="mb-4 text-sm text-gray-600">Semua pelanggan dilayani satu per satu oleh satu kasir.</p>
+      <div id="sync-kasir" class="space-y-2"></div>
+      <button onclick="startSyncKasir()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Jalankan Simulasi Synchronous</button>
+    </div><!-- Asynchronous Kasir (3 kasir) -->
 <div class="bg-white p-4 rounded shadow">
-  <h2 class="text-xl font-semibold mb-2">Asynchronous</h2>
-  <p class="mb-4 text-sm text-gray-600">Tugas berjalan terpisah. Tidak menunggu tugas lain selesai.</p>
-  <div id="async-output" class="space-y-2"></div>
-  <button onclick="runAsync()" class="mt-4 bg-green-600 text-white px-4 py-2 rounded">Jalankan Asinkron</button>
+  <h2 class="text-xl font-semibold mb-2">3 Kasir (Multithreaded/Asynchronous)</h2>
+  <p class="mb-4 text-sm text-gray-600">Pelanggan dibagi ke 3 kasir dan dilayani secara bersamaan.</p>
+  <div id="async-kasir" class="space-y-2"></div>
+  <button onclick="startAsyncKasir()" class="mt-4 bg-green-600 text-white px-4 py-2 rounded">Jalankan Simulasi Asynchronous</button>
 </div>
 
   </div>  <script>
-    function runSync() {
-      const output = document.getElementById('sync-output');
+    function startSyncKasir() {
+      const output = document.getElementById('sync-kasir');
       output.innerHTML = '';
+      let pelanggan = ["Pelanggan A", "Pelanggan B", "Pelanggan C"];
 
-      for (let i = 1; i <= 3; i++) {
-        const block = document.createElement('div');
-        block.className = 'bg-blue-100 text-blue-800 p-2 rounded';
-        block.innerText = `Tugas ${i} selesai (sync)`;
-        output.appendChild(block);
+      function layani(index) {
+        if (index >= pelanggan.length) return;
+        const el = document.createElement('div');
+        el.className = 'bg-blue-100 p-2 rounded';
+        el.innerText = `${pelanggan[index]} sedang dilayani...`;
+        output.appendChild(el);
+        setTimeout(() => {
+          el.innerText = `${pelanggan[index]} selesai dilayani.`;
+          layani(index + 1);
+        }, 2000);
       }
+
+      layani(0);
     }
 
-    function runAsync() {
-      const output = document.getElementById('async-output');
+    function startAsyncKasir() {
+      const output = document.getElementById('async-kasir');
       output.innerHTML = '';
+      const pelanggan = ["Pelanggan A", "Pelanggan B", "Pelanggan C", "Pelanggan D", "Pelanggan E", "Pelanggan F"];
+      const kasirCount = 3;
+      let kasirList = Array.from({ length: kasirCount }, (_, i) => []);
 
-      for (let i = 1; i <= 3; i++) {
-        const block = document.createElement('div');
-        block.className = 'bg-green-100 text-green-800 p-2 rounded';
-        block.innerText = `Menjalankan tugas ${i}... (async)`;
-        output.appendChild(block);
+      // Bagi pelanggan ke kasir
+      pelanggan.forEach((p, i) => {
+        kasirList[i % kasirCount].push(p);
+      });
 
-        setTimeout(() => {
-          block.innerText = `Tugas ${i} selesai (async)`;
-        }, 1000 * i);
-      }
+      kasirList.forEach((pelangganKasir, kasirIndex) => {
+        pelangganKasir.forEach((pel, i) => {
+          const delay = i * 2000;
+          setTimeout(() => {
+            const el = document.createElement('div');
+            el.className = 'bg-green-100 p-2 rounded';
+            el.innerText = `${pel} sedang dilayani di Kasir ${kasirIndex + 1}...`;
+            output.appendChild(el);
+            setTimeout(() => {
+              el.innerText = `${pel} selesai dilayani di Kasir ${kasirIndex + 1}.`;
+            }, 2000);
+          }, delay);
+        });
+      });
     }
   </script></body>
 </html>
